@@ -12,6 +12,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/split_member.hpp>
 
 class tree_vertex;
 
@@ -22,15 +23,48 @@ class tree_vertex {
     friend class boost::serialization::access;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
+    void save(Archive & ar, const unsigned int version) const
     {
-        ar & children;
         ar & string_numbers;
+        size_t array_size = children.size();
+        ar & array_size;
+        for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = children.begin();
+             iter!= children.end(); ++iter) {
+          ar & iter->first;
+          ar & (*iter->second.get());
+        }
+
     }
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
+        ar & string_numbers;
+        size_t arr_size;
+        ar & arr_size;
+        char letter;
+        tree_vertex buf;
+        for (size_t i = 0; i < arr_size; i++) {
+          ar & letter;
+          ar & buf;
+          children[letter] = tree_vertex_shared_ptr(new tree_vertex(buf));
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
   public:
     //typedef std::map<char, tree_vertex_shared_ptr >::iterator ChildIterator;
     tree_vertex() {}
+
+    tree_vertex(tree_vertex & orig) {
+      string_numbers.clear();
+      string_numbers.insert(orig.string_numbers.begin(), orig.string_numbers.end());
+      children.clear();
+      for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = orig.children.begin();
+           iter!= orig.children.end(); ++ iter) {
+        children[iter->first] = iter->second;
+      }
+
+    }
   public:
     //method returns pointer to found or newly created object
     tree_vertex* add_next(char l) {
