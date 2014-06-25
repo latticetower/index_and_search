@@ -23,30 +23,27 @@ class tree_vertex {
     friend class boost::serialization::access;
 
     template<class Archive>
-    void save(Archive & ar, const unsigned int version) const
-    {
+    void save(Archive & ar, const unsigned int version) const {
         ar & string_numbers;
         size_t array_size = children.size();
         ar & array_size;
         for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = children.begin();
              iter!= children.end(); ++iter) {
-          ar & iter->first;
-          ar & (*iter->second.get());
+            ar & iter->first;
+            ar & (*iter->second.get());
         }
-
     }
     template<class Archive>
-    void load(Archive & ar, const unsigned int version)
-    {
+    void load(Archive & ar, const unsigned int version) {
         ar & string_numbers;
         size_t arr_size;
         ar & arr_size;
         char letter;
         tree_vertex buf;
         for (size_t i = 0; i < arr_size; i++) {
-          ar & letter;
-          ar & buf;
-          children[letter] = tree_vertex_shared_ptr(new tree_vertex(buf));
+            ar & letter;
+            ar & buf;
+            children[letter] = tree_vertex_shared_ptr(new tree_vertex(buf));
         }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -56,60 +53,60 @@ class tree_vertex {
     tree_vertex() {}
 
     tree_vertex(tree_vertex & orig) {
-      string_numbers.clear();
-      string_numbers.insert(orig.string_numbers.begin(), orig.string_numbers.end());
-      children.clear();
-      for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = orig.children.begin();
-           iter!= orig.children.end(); ++ iter) {
-        children[iter->first] = iter->second;
-      }
+        string_numbers.clear();
+        string_numbers.insert(orig.string_numbers.begin(), orig.string_numbers.end());
+        children.clear();
+        for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = orig.children.begin();
+             iter!= orig.children.end(); ++ iter) {
+          children[iter->first] = iter->second;
+        }
 
     }
   public:
     //method returns pointer to found or newly created object
     tree_vertex* add_next(char l) {
-      std::map<char, tree_vertex_shared_ptr >::iterator iter = children.find(l);
-      if (iter != children.end()) {
-        return iter->second.get();
-      }
-      else {
-        children[l] = tree_vertex_shared_ptr(new tree_vertex());
-        return children[l].get();
-      }
+        std::map<char, tree_vertex_shared_ptr >::iterator iter = children.find(l);
+        if (iter != children.end()) {
+            return iter->second.get();
+        }
+        else {
+            children[l] = tree_vertex_shared_ptr(new tree_vertex());
+            return children[l].get();
+        }
     }
 
     tree_vertex* find_next(char l) {
-      std::map<char, tree_vertex_shared_ptr >::iterator iter = children.find(l);
-      if (iter != children.end()) {
-        return iter->second.get();
-      }
-      return NULL;
+        std::map<char, tree_vertex_shared_ptr >::iterator iter = children.find(l);
+        if (iter != children.end()) {
+          return iter->second.get();
+        }
+        return NULL;
     }
 
   public:
     //method collects and returns information about all occurencies - string_no and position
     std::set<size_t> get_all_string_numbers() {
-      std::set<size_t> result;
-      result.insert(string_numbers.begin(), string_numbers.end());
-      for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin(); iter != children.end(); ++iter) {
-        std::set<size_t> r = iter->second->get_all_string_numbers();
-        result.insert(r.begin(), r.end());
-      }
-      return result;
+        std::set<size_t> result;
+        result.insert(string_numbers.begin(), string_numbers.end());
+        for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin(); iter != children.end(); ++iter) {
+          std::set<size_t> r = iter->second->get_all_string_numbers();
+          result.insert(r.begin(), r.end());
+        }
+        return result;
     }
 
     void clear() {
-      children.clear();
-      string_numbers.clear();
+        children.clear();
+        string_numbers.clear();
     }
 
     //method adds some information about tree node to leaf
     void add_info(size_t string_no, size_t index) {
-      string_numbers.insert(string_no);
+        string_numbers.insert(string_no);
     }
   private:
-      std::map<char, tree_vertex_shared_ptr > children; // really im not sure now what to store
-      std::set<size_t> string_numbers;
+    std::map<char, tree_vertex_shared_ptr > children; // really im not sure now what to store
+    std::set<size_t> string_numbers;
 };
 
 class SuffixTree {
@@ -125,52 +122,54 @@ class SuffixTree {
     }
   protected:
     void addSuffix(size_t string_no, size_t index) {
-      tree_vertex * next = &root;
-      for (size_t i = index; i < string_container[string_no].size(); i++){
-        next = next->add_next(string_container[string_no][i]);
-      }
-      next->add_info(string_no, index);
+        tree_vertex * next = &root;
+        for (size_t i = index; i < string_container[string_no].size(); i++){
+          next = next->add_next(string_container[string_no][i]);
+        }
+        next->add_info(string_no, index);
     }
   public:
     SuffixTree() {}
+
     //method clears all resources
     void init() {
-      string_container.clear();
-      root.clear();
+        string_container.clear();
+        root.clear();
     }
+
     void addString(std::string const & reference_str, std::string const & str) {
-      string_container.push_back(str);
-      references_container.push_back(reference_str);
-      for (size_t i = 0; i < str.length(); i++) {
-        addSuffix(string_container.size() - 1, i);
-      }
+        string_container.push_back(str);
+        references_container.push_back(reference_str);
+        for (size_t i = 0; i < str.length(); i++) {
+            addSuffix(string_container.size() - 1, i);
+        }
     }
 
     std::set<std::string > findPattern(std::string const& pattern) {
-      std::set<std::string> result;
-      tree_vertex * next = &root;
-      for (size_t i = 0; i < pattern.size(); i++){
-        next = next->find_next(pattern[i]);
-        if (next == NULL)
-          return result; // string not found - return empty object
-      }
-      std::set<size_t> all_strings = next->get_all_string_numbers();
-      for (std::set<size_t >::iterator iter = all_strings.begin(); iter != all_strings.end(); ++ iter) {
-        result.insert(references_container[*iter]);
-      }
-      return result;
+        std::set<std::string> result;
+        tree_vertex * next = &root;
+        for (size_t i = 0; i < pattern.size(); i++){
+            next = next->find_next(pattern[i]);
+            if (next == NULL)
+                return result; // string not found - return empty object
+        }
+        std::set<size_t> all_strings = next->get_all_string_numbers();
+        for (std::set<size_t >::iterator iter = all_strings.begin(); iter != all_strings.end(); ++ iter) {
+            result.insert(references_container[*iter]);
+        }
+        return result;
     }
 
     static void save_to_file(SuffixTree tree, std::string const & output_file_name) {
-      std::ofstream ofs(output_file_name.c_str());
-      boost::archive::text_oarchive oa(ofs);
-      oa << tree;
+        std::ofstream ofs(output_file_name.c_str());
+        boost::archive::text_oarchive oa(ofs);
+        oa << tree;
     }
 
     static void load_from_file(SuffixTree& tree, std::string const& input_file_name) {
-      std::ifstream ifs(input_file_name.c_str());
-      boost::archive::text_iarchive ia(ifs);
-      ia >> tree;
+        std::ifstream ifs(input_file_name.c_str());
+        boost::archive::text_iarchive ia(ifs);
+        ia >> tree;
     }
   private:
     std::vector<std::string> string_container, references_container;
