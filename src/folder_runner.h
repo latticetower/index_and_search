@@ -22,6 +22,8 @@ class FolderRunner{
             throw std::runtime_error(folder_name + " is not a directory");
         for (fs::directory_iterator iter = fs::directory_iterator(processed_path);
                                     iter != fs::directory_iterator(); ++iter) {
+            if (fs::is_symlink(iter->path()))
+                continue;
             if (fs::is_directory(iter->path().native())) {
                 paths.push_back(std::make_pair(iter->path().native(), iter->path().filename().native()));
                 process_folder(iter->path().native());
