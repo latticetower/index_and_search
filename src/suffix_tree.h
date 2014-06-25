@@ -16,6 +16,7 @@ class tree_vertex {
     bool is_root;
     std::map<char, tree_vertex_shared_ptr > children; // really im not sure now what to store
     std::vector<std::pair<size_t, size_t> > positions;
+    std::set<size_t> string_numbers;
   public:
     //typedef std::map<char, tree_vertex_shared_ptr >::iterator ChildIterator;
     tree_vertex(): is_root(true) {}
@@ -43,22 +44,25 @@ class tree_vertex {
 
   public:
     //method collects and returns information about all occurencies - string_no and position
-    std::vector<std::pair<size_t, size_t> > get_all_pairs() {
-      std::vector<std::pair<size_t, size_t> > result;
-      result.insert(result.begin(), positions.begin(), positions.end());
+    std::set<size_t> get_all_string_numbers() {
+      std::set<size_t> result;
+      result.insert(string_numbers.begin(), string_numbers.end());
       for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin(); iter != children.end(); ++iter) {
-        std::vector<std::pair<size_t, size_t> > r = iter->second->get_all_pairs();
-        result.insert(result.begin(), r.begin(), r.end());
+        std::set<size_t> r = iter->second->get_all_string_numbers();
+        result.insert(r.begin(), r.end());
       }
       return result;
     }
 
     void clear() {
       children.clear();
+      string_numbers.clear();
     }
-    //methods adds some information about tree node to leaf
+
+    //method adds some information about tree node to leaf
     void add_info(size_t string_no, size_t index) {
       positions.push_back(std::make_pair(string_no, index));
+      string_numbers.insert(string_no);
     }
 };
 
@@ -81,7 +85,7 @@ class SuffixTree {
     void addString(std::string const & reference_str, std::string const & str) {
       string_container.push_back(str);
       references_container.push_back(reference_str);
-      for (size_t i = 0; i < _str.length(); i++) {
+      for (size_t i = 0; i < str.length(); i++) {
         addSuffix(string_container.size() - 1, i);
       }
     }
@@ -94,9 +98,9 @@ class SuffixTree {
         if (next == NULL)
           return result; // string not found - return empty object
       }
-      std::vector<std::pair<size_t, size_t> > all_pairs = next->get_all_pairs();
-      for (std::vector<std::pair<size_t, size_t> >::iterator iter = all_pairs.begin(); iter != all_pairs.end(); ++ iter) {
-        result.insert(references_container[iter->first]);
+      std::set<size_t> all_strings = next->get_all_string_numbers();
+      for (std::set<size_t >::iterator iter = all_strings.begin(); iter != all_strings.end(); ++ iter) {
+        result.insert(references_container[*iter]);
       }
       return result;
     }
