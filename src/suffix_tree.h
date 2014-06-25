@@ -49,7 +49,6 @@ class tree_vertex {
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
   public:
-    //typedef std::map<char, tree_vertex_shared_ptr >::iterator ChildIterator;
     tree_vertex() {}
 
     tree_vertex(tree_vertex & orig) {

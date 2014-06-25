@@ -21,8 +21,8 @@ void process_folder(SuffixTree & tree, std::string const& root_folder) {
         tree.addString(iter->first, iter->second);
       }
     }
-    catch (const fs::filesystem_error& ex) {
-      std::cout << ex.what() << '\n';
+    catch (const std::runtime_error& ex) {
+        std::cout << ex.what() << '\n';
     }
 }
 
@@ -43,20 +43,18 @@ bool parse_cmd_options(int argc, char*argv[], std::string & database_root_folder
         return false;
     }
     if (vm.count("database-root")) {
-        std::cout << "root folder is: " << vm["database-root"].as< std::string>() << "\n";
         database_root_folder = vm["database-root"].as< std::string>();
     }
     else {
-        std::cout << desc << "\n";
+        std::cout << "database-root key was not provided\n" << desc << "\n";
         return false;
     }
 
     if (vm.count("output")) {
-        std::cout << "File for saving information is: " << vm["output"].as< std::string >() << "\n";
         output_file_name = vm["output"].as<std::string>();
     }
     else {
-        std::cout << desc << "\n";
+        std::cout << "output key was not provided\n"  << desc << "\n";
         return false;
     }
     return true;
@@ -75,7 +73,7 @@ int main(int argc, char* argv[])
     }
     catch(std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
-          return 1;
+            return 1;
     }
     catch(...) {
         std::cerr << "Exception of unknown type!\n";

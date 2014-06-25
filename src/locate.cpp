@@ -32,7 +32,7 @@ bool parse_cmd_options(int argc, char*argv[], std::string & database_file, std::
         database_file = vm["database"].as<std::string>();
     }
     else {
-        std::cout << desc << "\n";
+        std::cout  << "database key was not provided\n" << desc << "\n";
         return false;
     }
 
@@ -40,26 +40,26 @@ bool parse_cmd_options(int argc, char*argv[], std::string & database_file, std::
         pattern = vm["pattern"].as<std::string>();
     }
     else {
-        std::cout << desc << "\n";
+        std::cout  << "pattern key was not provided\n" << desc << "\n";
         return false;
     }
-  return true;
+    return true;
 }
 
 
 int main(int argc, char* argv[])
 {
     try {
-      std::string database_file,  pattern;
-      if (!parse_cmd_options(argc, argv, database_file, pattern))
-        return 1;
-      SuffixTree tree;
-      SuffixTree::load_from_file(tree, database_file);
-      std::set<std::string> res = tree.findPattern(pattern);
-      for (std::set<std::string >::const_iterator iter = res.begin();
-           iter!= res.end(); ++iter) {
-        std::cout << *iter << std::endl;
-      }
+        std::string database_file,  pattern;
+        if (!parse_cmd_options(argc, argv, database_file, pattern))
+          return 1;
+        SuffixTree tree;
+        SuffixTree::load_from_file(tree, database_file);
+        std::set<std::string> res = tree.findPattern(pattern);
+        for (std::set<std::string >::const_iterator iter = res.begin();
+             iter!= res.end(); ++iter) {
+          std::cout << *iter << std::endl;
+        }
     }
     catch(std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";
