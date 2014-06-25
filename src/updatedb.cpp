@@ -18,12 +18,12 @@ void process_folder(SuffixTree & tree, std::string const& root_folder) {
   	{
       FolderRunner runner(root_folder);
       runner.run();
-			std::vector<std::pair<std::string, std::string> > const paths = runner.get_paths();
+      std::vector<std::pair<std::string, std::string> > const paths = runner.get_paths();
 
-			for (std::vector<std::pair<std::string, std::string> >::const_iterator iter = paths.begin();
-					 iter != paths.end(); ++iter) {
-				tree.addString(iter->first, iter->second);
-			}
+      for (std::vector<std::pair<std::string, std::string> >::const_iterator iter = paths.begin();
+           iter != paths.end(); ++iter) {
+        tree.addString(iter->first, iter->second);
+      }
     }
 
     catch (const fs::filesystem_error& ex)
@@ -68,19 +68,22 @@ bool parse_cmd_options(int argc, char*argv[], std::string & database_root_folder
   return true;
 }
 
+
+
 int main(int argc, char* argv[])
 {
     try {
       std::string database_root_folder, output_file_name;
       if (!parse_cmd_options(argc, argv, database_root_folder, output_file_name))
         return 1;
-			SuffixTree tree;
+      SuffixTree tree;
       process_folder(tree, database_root_folder);
-			std::set<std::string> res = tree.findPattern("hw");
-			for (std::set<std::string >::const_iterator iter = res.begin();
-			     iter!= res.end(); ++iter) {
-
-			}
+      std::set<std::string> res = tree.findPattern("task");
+      for (std::set<std::string >::const_iterator iter = res.begin();
+				   iter!= res.end(); ++iter) {
+            std::cout << *iter << std::endl;
+      }
+			SuffixTree::save_to_file(tree, output_file_name);
 
     }
     catch(std::exception& e) {
