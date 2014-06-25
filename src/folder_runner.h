@@ -29,7 +29,6 @@ class FolderRunner{
                 process_folder(iter->path().native());
             }
             if (fs::is_regular_file(iter->path().native())) {
-              std::cout << iter->path().filename().native()<<std::endl;
                 paths.push_back(std::make_pair(iter->path().native(), iter->path().filename().native()));
             }
         }
