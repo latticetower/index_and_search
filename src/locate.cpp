@@ -47,18 +47,19 @@ bool parse_cmd_options(int argc, char*argv[], std::string & database_file, std::
 }
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     try {
         std::string database_file,  pattern;
         if (!parse_cmd_options(argc, argv, database_file, pattern))
           return 1;
         SuffixTree tree;
         SuffixTree::load_from_file(tree, database_file);
-        std::set<std::string> res = tree.findPattern(pattern);
-        for (std::set<std::string >::const_iterator iter = res.begin();
+        SuffixTree::save_to_file(tree, "test");
+        std::cout << "pattern is " << pattern << std::endl;
+        std::set<std::pair<std::string, std::string> > res = tree.findPattern(pattern);
+        for (std::set<std::pair<std::string, std::string> >::const_iterator iter = res.begin();
              iter!= res.end(); ++iter) {
-          std::cout << *iter << std::endl;
+          std::cout << iter->first << " " << iter->second << std::endl;
         }
     }
     catch(std::exception& e) {

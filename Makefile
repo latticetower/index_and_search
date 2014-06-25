@@ -3,7 +3,7 @@ SRC_DIR=src/
 LIBRARIES=-lboost_program_options -lboost_system -lboost_filesystem -lboost_serialization
 BUILD_DIR=obj
 EXECUTABLES=locate updatedb
-FLAGS=
+FLAGS=-std=c++0x
 
 all: $(BUILD_DIR) $(EXECUTABLES)
 

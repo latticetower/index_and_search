@@ -1,4 +1,5 @@
 #pragma once
+//#include <memory>
 #include <set>
 #include <map>
 #include <algorithm>
@@ -14,6 +15,7 @@
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_member.hpp>
 
+
 class tree_vertex;
 
 typedef boost::shared_ptr<tree_vertex> tree_vertex_shared_ptr;
@@ -22,6 +24,13 @@ class tree_vertex {
   private:
     friend class boost::serialization::access;
 
+template<class Archive>
+void serialize(Archive & ar, const unsigned int version)
+{
+    ar & string_numbers;
+    ar & children;
+}
+    /*
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const {
         ar & string_numbers;
@@ -33,25 +42,27 @@ class tree_vertex {
             ar & (*iter->second.get());
         }
     }
+
     template<class Archive>
     void load(Archive & ar, const unsigned int version) {
         ar & string_numbers;
-        size_t arr_size;
+        size_t arr_size, map_size;
         ar & arr_size;
         char letter;
         tree_vertex buf;
+
         for (size_t i = 0; i < arr_size; i++) {
             ar & letter;
             ar & buf;
             children[letter] = tree_vertex_shared_ptr(new tree_vertex(buf));
         }
     }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
+    BOOST_SERIALIZATION_SPLIT_MEMBER() */
 
   public:
     tree_vertex() {}
 
-    tree_vertex(tree_vertex & orig) {
+    tree_vertex(tree_vertex const & orig) {
         string_numbers.clear();
         string_numbers.insert(orig.string_numbers.begin(), orig.string_numbers.end());
         children.clear();
@@ -103,10 +114,51 @@ class tree_vertex {
     void add_info(size_t string_no) {
         string_numbers.insert(string_no);
     }
+    bool operator == (tree_vertex & comp) {
+        if (string_numbers.size() != comp.string_numbers.size()) {
+            std::cout << "string_numbers size\n";
+            return false;
+        }
+        for (std::set<size_t>::iterator iter = string_numbers.begin();
+                                      iter != string_numbers.end(); ++iter) {
+            if (comp.string_numbers.find(*iter) == comp.string_numbers.end()) {
+                std::cout << "string_numbers element\n";
+                return false;
+            }
+        }
+        for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin();
+                        iter!= children.end(); ++iter) {
+            if (comp.children.find(iter->first) == comp.children.end()) {
+              std::cout << "children keys " << iter->first << std::endl;
+                for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = children.begin();
+                                iter2!= children.end(); ++iter2) {
+                std::cout << iter2->first << " ";
+                                }
+                std::cout << "\niter 2: " ;
+                for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = comp.children.begin();
+                                iter2!= comp.children.end(); ++iter2) {
+                std::cout << iter2->first << " ";
+                                }
+std::cout <<std::endl;
+                return false;
+            }
+            if ((*comp.children[iter->first].get()) != (*iter->second.get())) {
+                std::cout << "children values\n";
+                return false;
+            }
+        }
+        return true;
+
+    }
+    bool operator != (tree_vertex & comp) {
+        return !(*this == comp);
+    }
   private:
     std::map<char, tree_vertex_shared_ptr > children; // really im not sure now what to store
     std::set<size_t> string_numbers;
 };
+
+BOOST_SERIALIZATION_SHARED_PTR(tree_vertex)
 
 class SuffixTree {
   private:
@@ -145,8 +197,8 @@ class SuffixTree {
         }
     }
 
-    std::set<std::string > findPattern(std::string const& pattern) {
-        std::set<std::string> result;
+    std::set<std::pair<std::string, std::string> > findPattern(std::string const& pattern) {
+        std::set<std::pair<std::string, std::string> > result;
         tree_vertex * next = &root;
         for (size_t i = 0; i < pattern.size(); i++){
             next = next->find_next(pattern[i]);
@@ -155,7 +207,7 @@ class SuffixTree {
         }
         std::set<size_t> all_strings = next->get_all_string_numbers();
         for (std::set<size_t >::iterator iter = all_strings.begin(); iter != all_strings.end(); ++ iter) {
-            result.insert(references_container[*iter]);
+            result.insert(std::make_pair(references_container[*iter], string_container[*iter]));
         }
         return result;
     }
@@ -170,6 +222,28 @@ class SuffixTree {
         std::ifstream ifs(input_file_name.c_str());
         boost::archive::text_iarchive ia(ifs);
         ia >> tree;
+    }
+
+    bool operator == (SuffixTree & comp) {
+      std::cout << "in ==\n";
+        if (string_container.size() != comp.string_container.size()) {
+            std::cout << "string container size\n";
+            return false;
+        }
+        for (size_t i = 0; i < string_container.size(); i++) {
+            if (string_container[i] != comp.string_container[i]) {
+                std::cout << "string container element\n";
+                return false;
+            }
+            if (references_container[i] != comp.references_container[i]) {
+                std::cout << "references_container element\n";
+                return false;
+            }
+        }
+        return root == comp.root;
+    }
+    bool operator != (SuffixTree & comp) {
+      return !(*this==comp);
     }
   private:
     std::vector<std::string> string_container, references_container;
