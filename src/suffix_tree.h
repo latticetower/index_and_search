@@ -88,8 +88,8 @@ class tree_vertex {
         std::set<size_t> result;
         result.insert(string_numbers.begin(), string_numbers.end());
         for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin(); iter != children.end(); ++iter) {
-          std::set<size_t> r = iter->second->get_all_string_numbers();
-          result.insert(r.begin(), r.end());
+            std::set<size_t> r = iter->second->get_all_string_numbers();
+            result.insert(r.begin(), r.end());
         }
         return result;
     }
@@ -100,7 +100,7 @@ class tree_vertex {
     }
 
     //method adds some information about tree node to leaf
-    void add_info(size_t string_no, size_t index) {
+    void add_info(size_t string_no) {
         string_numbers.insert(string_no);
     }
   private:
@@ -125,7 +125,7 @@ class SuffixTree {
         for (size_t i = index; i < string_container[string_no].size(); i++){
           next = next->add_next(string_container[string_no][i]);
         }
-        next->add_info(string_no, index);
+        next->add_info(string_no);
     }
   public:
     SuffixTree() {}
@@ -133,6 +133,7 @@ class SuffixTree {
     //method clears all resources
     void init() {
         string_container.clear();
+        references_container.clear();
         root.clear();
     }
 
