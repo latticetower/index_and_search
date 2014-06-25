@@ -70,14 +70,6 @@ int main(int argc, char* argv[])
         SuffixTree tree, tree2;
         process_folder(tree, database_root_folder);
         SuffixTree::save_to_file(tree, output_file_name);
-        SuffixTree::load_from_file(tree2, output_file_name);
-        if (tree != tree2) {
-          std::cout << "problem with serialization\n";
-          return 1;
-        }
-        else {
-          std::cout << "equal\n";
-        }
     }
     catch(std::exception& e) {
         std::cerr << "error: " << e.what() << "\n";

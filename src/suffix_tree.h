@@ -13,7 +13,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/split_member.hpp>
 
 
 class tree_vertex;
@@ -24,40 +23,12 @@ class tree_vertex {
   private:
     friend class boost::serialization::access;
 
-template<class Archive>
-void serialize(Archive & ar, const unsigned int version)
-{
-    ar & string_numbers;
-    ar & children;
-}
-    /*
     template<class Archive>
-    void save(Archive & ar, const unsigned int version) const {
+    void serialize(Archive & ar, const unsigned int version)
+    {
         ar & string_numbers;
-        size_t array_size = children.size();
-        ar & array_size;
-        for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = children.begin();
-             iter!= children.end(); ++iter) {
-            ar & iter->first;
-            ar & (*iter->second.get());
-        }
+        ar & children;
     }
-
-    template<class Archive>
-    void load(Archive & ar, const unsigned int version) {
-        ar & string_numbers;
-        size_t arr_size, map_size;
-        ar & arr_size;
-        char letter;
-        tree_vertex buf;
-
-        for (size_t i = 0; i < arr_size; i++) {
-            ar & letter;
-            ar & buf;
-            children[letter] = tree_vertex_shared_ptr(new tree_vertex(buf));
-        }
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER() */
 
   public:
     tree_vertex() {}
@@ -70,7 +41,6 @@ void serialize(Archive & ar, const unsigned int version)
              iter!= orig.children.end(); ++ iter) {
           children[iter->first] = iter->second;
         }
-
     }
   public:
     //method returns pointer to found or newly created object
@@ -114,36 +84,38 @@ void serialize(Archive & ar, const unsigned int version)
     void add_info(size_t string_no) {
         string_numbers.insert(string_no);
     }
+
+    //for debugging purposes
     bool operator == (tree_vertex & comp) {
         if (string_numbers.size() != comp.string_numbers.size()) {
-            std::cout << "string_numbers size\n";
+            //std::cout << "string_numbers size\n";
             return false;
         }
         for (std::set<size_t>::iterator iter = string_numbers.begin();
                                       iter != string_numbers.end(); ++iter) {
             if (comp.string_numbers.find(*iter) == comp.string_numbers.end()) {
-                std::cout << "string_numbers element\n";
+                //std::cout << "string_numbers element\n";
                 return false;
             }
         }
         for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin();
                         iter!= children.end(); ++iter) {
             if (comp.children.find(iter->first) == comp.children.end()) {
-              std::cout << "children keys " << iter->first << std::endl;
+              //std::cout << "children keys " << iter->first << std::endl;
                 for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = children.begin();
                                 iter2!= children.end(); ++iter2) {
-                std::cout << iter2->first << " ";
+                //std::cout << iter2->first << " ";
                                 }
-                std::cout << "\niter 2: " ;
+                //std::cout << "\niter 2: " ;
                 for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = comp.children.begin();
                                 iter2!= comp.children.end(); ++iter2) {
-                std::cout << iter2->first << " ";
+                //std::cout << iter2->first << " ";
                                 }
-std::cout <<std::endl;
+                //std::cout <<std::endl;
                 return false;
             }
             if ((*comp.children[iter->first].get()) != (*iter->second.get())) {
-                std::cout << "children values\n";
+                //std::cout << "children values\n";
                 return false;
             }
         }
@@ -224,26 +196,27 @@ class SuffixTree {
         ia >> tree;
     }
 
+    //for debugging purposes
     bool operator == (SuffixTree & comp) {
-      std::cout << "in ==\n";
+        //std::cout << "in ==\n";
         if (string_container.size() != comp.string_container.size()) {
-            std::cout << "string container size\n";
+            //std::cout << "string container size\n";
             return false;
         }
         for (size_t i = 0; i < string_container.size(); i++) {
             if (string_container[i] != comp.string_container[i]) {
-                std::cout << "string container element\n";
+                //std::cout << "string container element\n";
                 return false;
             }
             if (references_container[i] != comp.references_container[i]) {
-                std::cout << "references_container element\n";
+                //std::cout << "references_container element\n";
                 return false;
             }
         }
         return root == comp.root;
     }
     bool operator != (SuffixTree & comp) {
-      return !(*this==comp);
+      return !(*this == comp);
     }
   private:
     std::vector<std::string> string_container, references_container;
