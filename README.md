@@ -10,3 +10,5 @@ Ideas and hints
 ---------------
 
 https://software.intel.com/ru-ru/blogs/2012/05/18/s
+
+Latest version can be found at https://github.com/latticetower/index_and_search
