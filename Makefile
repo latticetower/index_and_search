@@ -1,11 +1,11 @@
 #BOOST_DIR=/usr/local/include/boost
 SRC_DIR=src/
-LIBRARIES=-lboost_program_options -lboost_system -lboost_filesystem -lboost_serialization
+LIBRARIES=-lboost_program_options -lboost_system -lboost_filesystem -lboost_serialization -lboost_thread
 BUILD_DIR=obj
 EXECUTABLES=locate updatedb
 FLAGS=-std=c++0x
 
-all: $(BUILD_DIR) $(EXECUTABLES)
+all: clean $(BUILD_DIR) $(EXECUTABLES)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
