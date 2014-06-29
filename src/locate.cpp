@@ -55,8 +55,10 @@ int main(int argc, char* argv[]) {
           return 1;
         SuffixTree tree;
         SuffixTree::load_from_file(tree, database_file);
-        std::cout << "pattern is " << pattern << std::endl;
         std::set<std::pair<std::string, std::string> > res = tree.findPattern(pattern);
+        if (res.empty()) {
+          std::cout << "Pattern \"" << pattern << "\" was not found\n";
+        }
         for (std::set<std::pair<std::string, std::string> >::const_iterator iter = res.begin();
                               iter != res.end(); ++iter) {
             if (fs::exists(fs::path(iter->first)))
