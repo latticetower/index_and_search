@@ -12,14 +12,16 @@ namespace fs = boost::filesystem;
 
 void process_folder(SuffixTree & tree, std::string const& root_folder) {
     try {
-        FolderRunner runner(root_folder);
+        FolderRunner runner(root_folder, tree);
         runner.run();
+        /*
         std::vector<std::pair<std::string, std::string> > const paths = runner.get_paths();
 
         for (std::vector<std::pair<std::string, std::string> >::const_iterator iter = paths.begin();
                 iter != paths.end(); ++iter) {
             tree.addString(iter->first, iter->second);
         }
+        */
     }
     catch (const std::runtime_error& ex) {
         std::cout << ex.what() << '\n';
@@ -67,7 +69,7 @@ int main(int argc, char* argv[])
         std::string database_root_folder, output_file_name;
         if (!parse_cmd_options(argc, argv, database_root_folder, output_file_name))
             return 1;
-        SuffixTree tree, tree2;
+        SuffixTree tree;
         process_folder(tree, database_root_folder);
         SuffixTree::save_to_file(tree, output_file_name);
     }

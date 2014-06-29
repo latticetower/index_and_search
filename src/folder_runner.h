@@ -4,8 +4,9 @@
 #include <boost/thread/thread.hpp>
 #include <boost/filesystem.hpp>
 
-namespace fs = boost::filesystem;
+#include "suffix_tree.h"
 
+namespace fs = boost::filesystem;
 
 
 template<class FolderRunner>
@@ -18,6 +19,7 @@ class ThreadPool{
         for (size_t i = 0; i < num_of_threads; i++)
             thread_group.create_thread(boost::bind(&boost::asio::io_service::run, &io_service));
     }
+
     void stop() {
       io_service.stop();
     }
@@ -26,15 +28,14 @@ class ThreadPool{
       work.reset();
       thread_group.join_all();
     }
+
     ~ThreadPool() {
       stop();
       wait_all();
     }
 
     void addTask(FolderRunner& fr, std::string const& folder) {
-      //std::cout << "trying to add some task\n";
       io_service.post(boost::bind(&FolderRunner::process_folder, &fr, folder));
-      //std::cout << "task was added successfully\n";
     }
 
   private:
@@ -46,7 +47,7 @@ class ThreadPool{
 
 class FolderRunner{
   public:
-    FolderRunner(std::string const& root_path): root_folder_path(root_path) {
+    FolderRunner(std::string const& root_path, SuffixTree & tree): root_folder_path(root_path), _tree(tree) {
     }
 
     //this method makes all computations
@@ -66,18 +67,13 @@ class FolderRunner{
                                     iter != fs::directory_iterator(); ++iter) {
             if (fs::is_symlink(iter->path()))
                 continue;
-            if (fs::is_directory(iter->path().native())) {
-                _mutex.lock();
-                paths.push_back(std::make_pair(iter->path().native(), iter->path().filename().native()));
-                _mutex.unlock();
-                thread_pool.addTask(*this, iter->path().native());
 
-            }
-            //std::cout << "iter1\n";
-            if (fs::is_regular_file(iter->path().native())) {
-                _mutex.lock();
-                paths.push_back(std::make_pair(iter->path().native(), iter->path().filename().native()));
-                _mutex.unlock();
+            _mutex.lock();
+            _tree.addString(iter->path().native(), iter->path().filename().native() );
+            _mutex.unlock();
+
+            if (fs::is_directory(iter->path().native())) {
+                thread_pool.addTask(*this, iter->path().native());
             }
         }
     }
@@ -90,4 +86,5 @@ class FolderRunner{
     std::vector<std::pair<std::string, std::string> > paths;
     ThreadPool<FolderRunner> thread_pool;
     boost::mutex _mutex;
+    SuffixTree & _tree;
 };
