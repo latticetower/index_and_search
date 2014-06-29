@@ -13,6 +13,7 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 #include <boost/serialization/shared_ptr.hpp>
+#include <boost/thread/thread.hpp>
 
 
 class tree_vertex;
@@ -38,13 +39,15 @@ class tree_vertex {
         string_numbers.insert(orig.string_numbers.begin(), orig.string_numbers.end());
         children.clear();
         for (std::map<char, tree_vertex_shared_ptr >::const_iterator iter = orig.children.begin();
-             iter!= orig.children.end(); ++ iter) {
-          children[iter->first] = iter->second;
+             iter != orig.children.end(); ++ iter) {
+            children[iter->first] = iter->second;
         }
     }
+
   public:
     //method returns pointer to found or newly created object
     tree_vertex* add_next(char l) {
+        boost::mutex::scoped_lock lock(vertex_mutex);
         std::map<char, tree_vertex_shared_ptr >::iterator iter = children.find(l);
         if (iter != children.end()) {
             return iter->second.get();
@@ -82,52 +85,42 @@ class tree_vertex {
 
     //method adds some information about tree node to leaf
     void add_info(size_t string_no) {
+        boost::mutex::scoped_lock lock(vertex_mutex);
         string_numbers.insert(string_no);
     }
 
     //for debugging purposes
     bool operator == (tree_vertex & comp) {
         if (string_numbers.size() != comp.string_numbers.size()) {
-            //std::cout << "string_numbers size\n";
             return false;
         }
         for (std::set<size_t>::iterator iter = string_numbers.begin();
                                       iter != string_numbers.end(); ++iter) {
             if (comp.string_numbers.find(*iter) == comp.string_numbers.end()) {
-                //std::cout << "string_numbers element\n";
                 return false;
             }
         }
         for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin();
                         iter!= children.end(); ++iter) {
             if (comp.children.find(iter->first) == comp.children.end()) {
-              //std::cout << "children keys " << iter->first << std::endl;
-                for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = children.begin();
-                                iter2!= children.end(); ++iter2) {
-                //std::cout << iter2->first << " ";
-                                }
-                //std::cout << "\niter 2: " ;
-                for (std::map<char, tree_vertex_shared_ptr >::iterator iter2 = comp.children.begin();
-                                iter2!= comp.children.end(); ++iter2) {
-                //std::cout << iter2->first << " ";
-                                }
-                //std::cout <<std::endl;
                 return false;
             }
             if ((*comp.children[iter->first].get()) != (*iter->second.get())) {
-                //std::cout << "children values\n";
                 return false;
             }
         }
         return true;
 
     }
+
     bool operator != (tree_vertex & comp) {
         return !(*this == comp);
     }
+
   private:
-    std::map<char, tree_vertex_shared_ptr > children; // really im not sure now what to store
+    std::map<char, tree_vertex_shared_ptr > children;
     std::set<size_t> string_numbers;
+    boost::mutex vertex_mutex; //makin' myself thread-safe
 };
 
 BOOST_SERIALIZATION_SHARED_PTR(tree_vertex)
@@ -156,16 +149,23 @@ class SuffixTree {
 
     //method clears all resources
     void init() {
+        tree_mutex.lock();
         string_container.clear();
         references_container.clear();
+        tree_mutex.unlock();
         root.clear();
     }
 
     void addString(std::string const & reference_str, std::string const & str) {
+        size_t index = 0;
+        tree_mutex.lock();
         string_container.push_back(str);
         references_container.push_back(reference_str);
+        index = string_container.size() - 1;
+        tree_mutex.unlock();
+
         for (size_t i = 0; i < str.length(); i++) {
-            addSuffix(string_container.size() - 1, i);
+            addSuffix(index, i);
         }
     }
 
@@ -184,7 +184,7 @@ class SuffixTree {
         return result;
     }
 
-    static void save_to_file(SuffixTree tree, std::string const & output_file_name) {
+    static void save_to_file(SuffixTree & tree, std::string const & output_file_name) {
         std::ofstream ofs(output_file_name.c_str());
         boost::archive::text_oarchive oa(ofs);
         oa << tree;
@@ -221,4 +221,5 @@ class SuffixTree {
   private:
     std::vector<std::string> string_container, references_container;
     tree_vertex root;
+    boost::mutex tree_mutex;
 };

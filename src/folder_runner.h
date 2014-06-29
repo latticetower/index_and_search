@@ -9,10 +9,9 @@
 namespace fs = boost::filesystem;
 
 
-template<class FolderRunner>
+template<class FolderRunner, class SuffixTree>
 class ThreadPool{
   public:
-    typedef void (FolderRunner::* processor_func_ptr)(std::string const & );
 
     ThreadPool(): io_service(), work(new boost::asio::io_service::work(io_service)) {
         num_of_threads = boost::thread::hardware_concurrency();
@@ -34,8 +33,12 @@ class ThreadPool{
       wait_all();
     }
 
-    void addTask(FolderRunner& fr, std::string const& folder) {
-      io_service.post(boost::bind(&FolderRunner::process_folder, &fr, folder));
+    void addTask(FolderRunner* fr, std::string const& folder) {
+        io_service.post(boost::bind(&FolderRunner::process_folder, fr, folder));
+    }
+
+    void addTask(SuffixTree* tree, std::string const& full_path, std::string const & short_path) {
+        io_service.post(boost::bind(&SuffixTree::addString, tree, full_path, short_path));
     }
 
   private:
@@ -52,7 +55,7 @@ class FolderRunner{
 
     //this method makes all computations
     void run() {
-        thread_pool.addTask(*this, root_folder_path);
+        thread_pool.addTask(this, root_folder_path);
         thread_pool.wait_all();
     }
 
@@ -67,19 +70,16 @@ class FolderRunner{
             if (fs::is_symlink(iter->path()))
                 continue;
 
-            _mutex.lock();
-            _tree.addString(iter->path().native(), iter->path().filename().native() );
-            _mutex.unlock();
+            thread_pool.addTask(&_tree, iter->path().native(), iter->path().filename().native() );
 
             if (fs::is_directory(iter->path().native())) {
-                thread_pool.addTask(*this, iter->path().native());
+                thread_pool.addTask(this, iter->path().native());
             }
         }
     }
 
   private:
     std::string root_folder_path;
-    ThreadPool<FolderRunner> thread_pool;
-    boost::mutex _mutex;
+    ThreadPool<FolderRunner, SuffixTree> thread_pool;
     SuffixTree & _tree;
 };
