@@ -69,6 +69,7 @@ class tree_vertex {
   public:
     //method collects and returns information about all occurencies - string_no and position
     std::set<size_t> get_all_string_numbers() {
+        boost::mutex::scoped_lock lock(vertex_mutex);
         std::set<size_t> result;
         result.insert(string_numbers.begin(), string_numbers.end());
         for (std::map<char, tree_vertex_shared_ptr >::iterator iter = children.begin(); iter != children.end(); ++iter) {
@@ -79,6 +80,7 @@ class tree_vertex {
     }
 
     void clear() {
+        boost::mutex::scoped_lock lock(vertex_mutex);
         children.clear();
         string_numbers.clear();
     }
@@ -125,6 +127,8 @@ class tree_vertex {
 
 BOOST_SERIALIZATION_SHARED_PTR(tree_vertex)
 
+
+
 class SuffixTree {
   private:
     friend class boost::serialization::access;
@@ -149,20 +153,20 @@ class SuffixTree {
 
     //method clears all resources
     void init() {
-        tree_mutex.lock();
+        boost::mutex::scoped_lock lock(tree_mutex);
         string_container.clear();
         references_container.clear();
-        tree_mutex.unlock();
+        lock.unlock();
         root.clear();
     }
 
     void addString(std::string const & reference_str, std::string const & str) {
         size_t index = 0;
-        tree_mutex.lock();
+        boost::mutex::scoped_lock lock(tree_mutex);
         string_container.push_back(str);
         references_container.push_back(reference_str);
         index = string_container.size() - 1;
-        tree_mutex.unlock();
+        lock.unlock();
 
         for (size_t i = 0; i < str.length(); i++) {
             addSuffix(index, i);
