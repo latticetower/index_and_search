@@ -14,14 +14,6 @@ void process_folder(SuffixTree & tree, std::string const& root_folder) {
     try {
         FolderRunner runner(root_folder, tree);
         runner.run();
-        /*
-        std::vector<std::pair<std::string, std::string> > const paths = runner.get_paths();
-
-        for (std::vector<std::pair<std::string, std::string> >::const_iterator iter = paths.begin();
-                iter != paths.end(); ++iter) {
-            tree.addString(iter->first, iter->second);
-        }
-        */
     }
     catch (const std::runtime_error& ex) {
         std::cout << ex.what() << '\n';
