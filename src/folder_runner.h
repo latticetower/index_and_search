@@ -52,7 +52,6 @@ class FolderRunner{
 
     //this method makes all computations
     void run() {
-        paths.clear();
         thread_pool.addTask(*this, root_folder_path);
         thread_pool.wait_all();
     }
@@ -78,12 +77,8 @@ class FolderRunner{
         }
     }
 
-    std::vector<std::pair<std::string, std::string> > const & get_paths() {
-        return paths;
-    }
   private:
     std::string root_folder_path;
-    std::vector<std::pair<std::string, std::string> > paths;
     ThreadPool<FolderRunner> thread_pool;
     boost::mutex _mutex;
     SuffixTree & _tree;
